@@ -1,0 +1,52 @@
+version: '3.8'
+
+services:
+  postgresql:
+    image: postgres:latest
+    container_name: clinic_cms_db
+    environment:
+      POSTGRES_DB: clinic_cms_db
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: password
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+
+  cal_diy:
+    image: cal.diy:latest
+    container_name: booking.clinic.com
+    environment:
+      - DB_HOST=postgres
+      - DB_PORT=5432
+      - DB_NAME=clinic_cms_db
+      - DB_USER=postgres
+      - DB_PASS=password
+    depends_on:
+      - postgresql
+
+  caddy:
+    image: caddy:latest
+    container_name: caddy
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - /home/ramesh/Projects/clinic-appointment/infra/Caddyfile:/etc/caddy/Caddyfile
+      - ./apps/web:/app/web
+      - ./apps/api:/app/api
+    depends_on:
+      - cal_diy
+
+  umami:
+    image: ghcr.io/umami-software/umami:latest
+    container_name: umami
+    environment:
+      - DATABASE_URL=postgres://postgres:password@postgresql:5432/clinic_cms_db
+    ports:
+      - "3000:3000"
+    depends_on:
+      - postgresql
+
+volumes:
+  pgdata:

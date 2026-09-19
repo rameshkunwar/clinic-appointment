@@ -1,0 +1,15 @@
+api.clinic-appointment.local {
+  reverse_proxy localhost:5000
+}
+
+web.clinic-appointment.local {
+  reverse_proxy localhost:3000
+}
+
+booking.clinic-appointment.local {
+  reverse_proxy localhost:4000
+}
+
+umami.clinic-appointment.local {
+  reverse_proxy localhost:3000
+}
