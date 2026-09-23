@@ -89,5 +89,5 @@ Work through these tasks in order. Check off each task only after verification p
 - [x] Task 2: Write `infra/docker-compose.yml` (PostgreSQL, Cal.diy, Caddy, Umami) and `infra/Caddyfile`.
 - [x] Task 3: Initialize .NET 10 Web API in `apps/api` with Npgsql, EF Core, Wolverine, and FluentValidation packages.
 - [x] Task 4: Initialize TanStack Start app in `apps/web` with Tailwind CSS and Shadcn UI.
-- [ ] Task 5: Implement `ClinicPost` EF model and `PostsController` using VSA + Wolverine.
+- [x] Task 5: Implement `ClinicPost` EF model and `PostsController` using VSA + Wolverine.
 - [ ] Task 6: Implement JWT/HttpOnly auth for clinic staff using VSA + Wolverine.
