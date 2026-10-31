@@ -3,6 +3,7 @@ using Wolverine;
 using Clinic.API.Features.Auth.Register;
 using Clinic.API.Features.Auth.Login;
 using Clinic.API.Features.Auth.Logout;
+using Clinic.API.Features.Auth.Models;
 using Microsoft.AspNetCore.Authorization;
 
 namespace Clinic.API.Features.Auth
@@ -20,28 +21,28 @@ namespace Clinic.API.Features.Auth
 
         [Authorize(Roles = "Admin")]
         [HttpPost("register")]
-        public async Task<ActionResult<RegisterResponse>> Register([FromBody] RegisterCommand command)
+        public async Task<ActionResult<AuthResponse>> Register([FromBody] RegisterRequest command)
         {
-            var response = await _messageBus.InvokeAsync<RegisterResponse>(command);
-            if (!response.Success)
+            var response = await _messageBus.InvokeAsync<AuthResponse>(command);
+            if (response == null)
             {
-                return BadRequest(response);
+                return BadRequest("Registration failed.");
             }
             return Ok(response);
         }
 
         [AllowAnonymous]
         [HttpPost("login")]
-        public async Task<ActionResult<LoginResponse>> Login([FromBody] LoginCommand command)
+        public async Task<ActionResult<AuthResponse>> Login([FromBody] LoginRequest command)
         {
-            var response = await _messageBus.InvokeAsync<LoginResponse>(command);
-            if (!response.Success)
+            var response = await _messageBus.InvokeAsync<AuthResponse>(command);
+            if (response == null)
             {
-                return Unauthorized(response);
+                return Unauthorized("Login failed.");
             }
 
             // Set the JWT as an HttpOnly cookie
-            Response.Cookies.Append("X-Access-Token", response.Token ?? string.Empty,
+            Response.Cookies.Append("X-Access-Token", response.AccessToken ?? string.Empty,
                 new CookieOptions
                 {
                     HttpOnly = true,
@@ -51,18 +52,18 @@ namespace Clinic.API.Features.Auth
                     Secure = true // Only send over HTTPS
                 });
 
-            return Ok(new { response.Success, response.Message });
+            return Ok(response);
         }
 
         [Authorize]
         [HttpPost("logout")]
-        public async Task<ActionResult<LogoutResponse>> Logout()
+        public async Task<ActionResult> Logout()
         {
             // Clear the HttpOnly cookie
             Response.Cookies.Delete("X-Access-Token");
 
-            var response = await _messageBus.InvokeAsync<LogoutResponse>(new LogoutCommand());
-            return Ok(response);
+            await _messageBus.InvokeAsync<object>(new LogoutCommand());
+            return Ok();
         }
     }
 }

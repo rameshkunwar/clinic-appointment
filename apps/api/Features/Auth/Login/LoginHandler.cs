@@ -1,34 +1,34 @@
 using Clinic.API.Data;
+using Clinic.API.Features.Auth.Models;
 using Clinic.API.Features.Auth.Services;
-using Microsoft.EntityFrameworkCore;
+using FluentValidation;
 
-namespace Clinic.API.Features.Auth.Login
+namespace Clinic.API.Features.Auth.Login;
+
+public static class LoginHandler
 {
-    public static class LoginHandler
+    public static async Task<AuthResponse> Handle(
+        LoginRequest command,
+        UserService userService,
+        ITokenService tokenService)
     {
-        public static async Task<LoginResponse> Handle(
-            LoginCommand command,
-            AppDbContext db,
-            IPasswordHasher passwordHasher,
-            ITokenService tokenService,
-            CancellationToken ct)
+        var user = await userService.ValidateUserCredentials(command.Email, command.Password);
+        if (user == null)
         {
-            var user = await db.StaffUsers.FirstOrDefaultAsync(u => u.Username == command.Username, ct);
-            if (user == null)
-            {
-                return new LoginResponse(false, "Invalid credentials.", null);
-            }
-
-            var isPasswordValid = passwordHasher.VerifyPassword(user.PasswordHash, command.Password + user.Salt);
-            if (!isPasswordValid)
-            {
-                return new LoginResponse(false, "Invalid credentials.", null);
-            }
-
-            var token = tokenService.GenerateAccessToken(user);
-            return new LoginResponse(true, "Login successful.", token);
+            throw new ValidationException("Invalid credentials.");
         }
-    }
 
-    public record LoginResponse(bool Success, string Message, string? Token);
+        var token = tokenService.GenerateJwtToken(user);
+        return token;
+    }
 }
+
+public class LoginRequestValidator : AbstractValidator<LoginRequest>
+{
+    public LoginRequestValidator()
+    {
+        RuleFor(x => x.Email).NotEmpty().EmailAddress();
+        RuleFor(x => x.Password).NotEmpty();
+    }
+}
+

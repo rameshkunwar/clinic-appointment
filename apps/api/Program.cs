@@ -10,6 +10,7 @@ using Microsoft.IdentityModel.Tokens;
 using System.Text;
 using System.Security.Claims;
 using Clinic.API.Features.Auth.Services;
+using Microsoft.AspNetCore.HttpOverrides;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -17,7 +18,6 @@ builder.Services.AddOpenApi();
 
 builder.Services.AddControllers();
 
-builder.Services.AddScoped<IPasswordHasher, PasswordHasher>();
 builder.Services.AddScoped<ITokenService, TokenService>();
 
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
@@ -49,7 +49,7 @@ builder.Services.AddDbContext<AppDbContext>(options =>
 
 builder.Host.UseWolverine(options =>
 {
-    options.CodeGeneration.TypeLoadMode = TypeLoadMode.Auto;
+    options.InvokeTracing = InvokeTracingMode.Full;
     options.UseFluentValidation();
 });
 
@@ -68,11 +68,18 @@ if (app.Environment.IsDevelopment())
     app.MapScalarApiReference("/api-docs");
 }
 
+app.UseForwardedHeaders(new ForwardedHeadersOptions
+{
+    ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto
+});
+
 app.UseHttpsRedirection();
 
 app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();
+
+app.MapGet("/health", () => "OK");
 
 app.Run();

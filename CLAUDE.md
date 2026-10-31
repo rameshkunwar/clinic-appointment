@@ -82,12 +82,16 @@ builder.Host.UseDefaultServiceProvider(options => options.ValidateScopes = true)
 - Prefer explicit types over `any`.
 - Use Shadcn UI primitives; do not roll custom components when a Shadcn equivalent exists.
 
+# Proxy & Networking Rules
+- The Caddy reverse proxy automatically passes the incoming `Host` header to the backend without modifications. 
+- Caddy also automatically sets the `X-Forwarded-For`, `X-Forwarded-Proto`, and `X-Forwarded-Host` headers. The .NET API must be configured with `ForwardedHeadersOptions` to read these for proper JWT cookie validation and URL generation.
+- For production reliability, utilize Caddy's active health checks by configuring the `health_uri` parameter to point to the .NET API's health endpoint.
+
+# Frontend Build & Deployment (TanStack Start)
+- When writing the Dockerfile for TanStack Start, you must use a multi-stage build. This keeps the final Docker image small because you do not include build tools like TypeScript or Vite in the final container.
+- The TanStack Start Nitro build bundles its own dependencies directly into the `.output` directory, so the runtime stage does not need the `node_modules` folder or the `package.json` file.
+- The production command to run the built TanStack application is `node .output/server/index.mjs`.
+
 # Implementation Roadmap
 Work through these tasks in order. Check off each task only after verification passes.
 
-- [x] Task 1: Create base folder structure (`apps/web`, `apps/api`, `infra`).
-- [x] Task 2: Write `infra/docker-compose.yml` (PostgreSQL, Cal.diy, Caddy, Umami) and `infra/Caddyfile`.
-- [x] Task 3: Initialize .NET 10 Web API in `apps/api` with Npgsql, EF Core, Wolverine, and FluentValidation packages.
-- [x] Task 4: Initialize TanStack Start app in `apps/web` with Tailwind CSS and Shadcn UI.
-- [x] Task 5: Implement `ClinicPost` EF model and `PostsController` using VSA + Wolverine.
-- [x] Task 6: Implement JWT/HttpOnly auth for clinic staff using VSA + Wolverine.

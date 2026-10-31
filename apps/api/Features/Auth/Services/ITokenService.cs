@@ -1,11 +1,11 @@
 using System.Security.Claims;
 using Clinic.API.Features.Auth.Models;
+using Clinic.API.Entities;
 
 namespace Clinic.API.Features.Auth.Services
 {
     public interface ITokenService
     {
-        string GenerateAccessToken(StaffUser user);
-        ClaimsPrincipal GetPrincipalFromToken(string token);
+        AuthResponse GenerateJwtToken(User user);
     }
 }

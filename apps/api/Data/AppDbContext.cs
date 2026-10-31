@@ -1,6 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using Clinic.API.Features.Posts;
-using Clinic.API.Features.Auth.Models;
+using Clinic.API.Entities;
 
 namespace Clinic.API.Data
 {
@@ -11,7 +11,7 @@ namespace Clinic.API.Data
         }
 
         public DbSet<ClinicPost> ClinicPosts { get; set; }
-        public DbSet<StaffUser> StaffUsers { get; set; }
+        public DbSet<User> Users { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {

@@ -9,6 +9,15 @@ import tailwindcss from '@tailwindcss/vite'
 import { nitro } from 'nitro/vite'
 
 const config = defineConfig({
+  server: {
+    proxy: {
+      '/api': {
+        target: 'http://localhost:5238', // Assuming backend runs on port 5000
+        changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/api/, ''),
+      },
+    },
+  },
   resolve: { tsconfigPaths: true },
   plugins: [
     devtools(),
