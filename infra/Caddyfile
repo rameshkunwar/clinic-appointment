@@ -1,5 +1,7 @@
 api.clinic-appointment.local {
-  reverse_proxy localhost:5000
+  reverse_proxy localhost:5000 {
+    health_uri /health
+  }
 }
 
 web.clinic-appointment.local {
