@@ -19,7 +19,8 @@ namespace Clinic.API.Features.Auth.Models
         [Required]
         public string Salt { get; set; } = null!;
 
-        public Role Role { get; set; }
+        [Required]
+    public string Email { get; set; } = string.Empty;
 
         public DateTime CreatedAt { get; set; }
         public DateTime UpdatedAt { get; set; }

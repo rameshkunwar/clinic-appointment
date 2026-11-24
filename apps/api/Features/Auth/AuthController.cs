@@ -4,6 +4,7 @@ using Clinic.API.Features.Auth.Register;
 using Clinic.API.Features.Auth.Login;
 using Clinic.API.Features.Auth.Logout;
 using Clinic.API.Features.Auth.Models;
+using Clinic.API.Features.Auth.GetMe;
 using Microsoft.AspNetCore.Authorization;
 
 namespace Clinic.API.Features.Auth
@@ -52,6 +53,18 @@ namespace Clinic.API.Features.Auth
                     Secure = true // Only send over HTTPS
                 });
 
+            return Ok(response);
+        }
+
+        [Authorize]
+        [HttpGet("me")]
+        public async Task<ActionResult<GetMeResponse>> GetMe([FromQuery] GetMeCommand command)
+        {
+            var response = await _messageBus.InvokeAsync<GetMeResponse>(command);
+            if (response == null)
+            {
+                return NotFound();
+            }
             return Ok(response);
         }
 

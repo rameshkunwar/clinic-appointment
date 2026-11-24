@@ -12,6 +12,9 @@ interface Post {
   id: string
   title: string
   content: string
+  author: string
+  createdAt: string
+  updatedAt: string
 }
 
 const columns: ColumnDef<Post>[] = [
@@ -23,13 +26,24 @@ const columns: ColumnDef<Post>[] = [
     accessorKey: 'content',
     header: 'Content',
   },
+  {
+    accessorKey: 'author',
+    header: 'Author',
+  },
+  {
+    accessorKey: 'createdAt',
+    header: 'Created At',
+    cell: (info) => new Date(info.row.original.createdAt).toLocaleString(),
+  },
 ]
 
 function AdminDashboard() {
   const [posts, setPosts] = useState<Post[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [newPostTitle, setNewPostTitle] = useState('')
   const [newPostContent, setNewPostContent] = useState('')
+  const [isSubmitting, setIsSubmitting] = useState(false)
 
   useEffect(() => {
     const fetchPosts = async () => {
@@ -37,13 +51,13 @@ function AdminDashboard() {
         const response = await fetch('/api/posts', { credentials: 'include' })
         if (!response.ok) {
           if (response.status === 401) {
-            window.location.href = '/admin/login' // Redirect to login if unauthorized
+            window.location.href = '/admin/login'
             return
           }
           throw new Error(`Error fetching posts: ${response.statusText}`)
         }
         const data = await response.json()
-        setPosts(data)
+        setPosts(data.posts)
       } catch (err: any) {
         setError(err.message)
       } finally {
@@ -53,9 +67,55 @@ function AdminDashboard() {
     fetchPosts()
   }, [])
 
-  const handleNewPostSubmit = () => {
-    console.log('New post content:', newPostContent)
-    // TODO: Implement API call to save new post
+  const handleNewPostSubmit = async () => {
+    if (!newPostTitle.trim() || !newPostContent.trim()) {
+      alert('Please provide both a title and content.')
+      return
+    }
+
+    setIsSubmitting(true)
+    setError(null)
+    try {
+      const response = await fetch('/api/posts', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          title: newPostTitle,
+          content: newPostContent,
+          author: 'Admin',
+        }),
+      })
+
+      if (!response.ok) {
+        throw new Error(`Failed to create post: ${response.statusText}`)
+      }
+
+      const result = await response.json()
+
+      // Update local state
+      setPosts(prev => [
+        {
+          id: result.id,
+          title: result.title,
+          content: result.content,
+          author: result.author,
+          createdAt: result.createdAt,
+          updatedAt: result.updatedAt,
+        },
+        ...prev,
+      ])
+
+      // Reset form
+      setNewPostTitle('')
+      setNewPostContent('')
+      alert('Post created successfully!')
+    } catch (err: any) {
+      setError(err.message)
+    } finally {
+      setIsSubmitting(false)
+    }
   }
 
   if (loading) {
@@ -75,16 +135,32 @@ function AdminDashboard() {
 
         <div className="mt-8">
           <h4 className="text-xl font-semibold mb-4">Create New Post</h4>
-          <RichTextEditor
-            content={newPostContent}
-            onContentChange={setNewPostContent}
-          />
-          <button
-            onClick={handleNewPostSubmit}
-            className="mt-4 px-4 py-2 bg-blue-600 text-white rounded-md"
-          >
-            Save New Post
-          </button>
+          <div className="space-y-4">
+            <div>
+              <label className="block text-sm font-medium mb-1">Title</label>
+              <input
+                type="text"
+                className="w-full p-2 border rounded"
+                placeholder="Enter post title"
+                value={newPostTitle}
+                onChange={(e) => setNewPostTitle(e.target.value)}
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium mb-1">Content</label>
+              <RichTextEditor
+                content={newPostContent}
+                onContentChange={setNewPostContent}
+              />
+            </div>
+            <button
+              onClick={handleNewPostSubmit}
+              disabled={isSubmitting}
+              className="mt-4 px-4 py-2 bg-blue-600 text-white rounded-md disabled:bg-gray-400"
+            >
+              {isSubmitting ? 'Saving...' : 'Save New Post'}
+            </button>
+          </div>
         </div>
       </div>
     </div>
