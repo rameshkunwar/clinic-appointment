@@ -11,6 +11,7 @@ using System.Text;
 using System.Security.Claims;
 using Clinic.API.Features.Auth.Services;
 using Microsoft.AspNetCore.HttpOverrides;
+using Clinic.API.Features.Appointments.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -55,13 +56,13 @@ builder.Host.UseWolverine(options =>
 
 builder.Host.UseDefaultServiceProvider(options => options.ValidateScopes = true);
 
-
-// Add services to the container.
-// Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
+builder.Services.AddHttpClient<ICalDiyService, CalDiyService>(client =>
+{
+    client.BaseAddress = new Uri("http://booking.clinic.com");
+});
 
 var app = builder.Build();
 
-// Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
     app.MapOpenApi();
@@ -76,6 +77,7 @@ app.UseForwardedHeaders(new ForwardedHeadersOptions
 app.UseHttpsRedirection();
 
 app.UseAuthentication();
+
 app.UseAuthorization();
 
 app.MapControllers();
